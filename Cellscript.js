@@ -10,7 +10,6 @@ Object.assign(Sphere.Game, {
 	main: '@/scripts/main.js',
 });
 
-install('@/node_modules',	files('node_modules/*', true));
 install('@/scripts',		files('src/*.js'));
 install('@/lib',			files('lib/*.js', true));
 install('@/maps',			files('maps/*', true));
