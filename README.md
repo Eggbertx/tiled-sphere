@@ -1,5 +1,5 @@
 # tiled-sphere
-An experimental map reader for [Tiled](mapeditor.org/) XML and JSON maps that will hopefully eventually turn into a useful map engine
+An experimental map reader for [Tiled](mapeditor.org/) XML and JSON maps that will hopefully eventually turn into a useful Sphere map engine. Maybe I'll make it platform agnostic so it can be used for other JavaScript stuff, but that won't be a priority.
 
 ## Usage
 Currently this doesn't actually do anything interesting, it just parses the map files for testing. When that fully works, I'll start working on actually rendering them.
@@ -16,5 +16,3 @@ The [Sphere 2.x API definition file](types/sphere2-api.d.ts) was also developed 
 [pako](https://github.com/nodeca/pako/) is developed by nodeka
 
 These libraries are packaged with tiled-sphere for convenience, since it's simpler to package them than to have to import the npm packages.
-
-Both sax-js and xml.js are packaged with tiled-sphere to make importing it more convenient.
