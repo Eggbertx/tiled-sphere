@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="right-down" compressionlevel="0" width="9" height="9" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="1">
+ <properties>
+  <property name="musicFile" value="bg.ogg"/>
+  <property name="obj test" type="object" value="0"/>
+  <property name="onEnter" value="Sphere.abort(&quot;Entering&quot;)"/>
+  <property name="onLeave" value="Sphere.abort(&quot;Leaving&quot;)"/>
+  <property name="onLeaveEast" value="Sphere.abort(&quot;Leaving east&quot;)"/>
+  <property name="onLeaveNorth" value="Sphere.abort(&quot;Leaving north&quot;)"/>
+  <property name="onLeaveSouth" value="Sphere.abort(&quot;Leaving south&quot;)"/>
+  <property name="onLeaveWest" value="Sphere.abort(&quot;Leaving west&quot;)"/>
+ </properties>
+ <tileset firstgid="1" name="monobomber-tileset" tilewidth="32" tileheight="32" tilecount="9" columns="9">
+  <image source="monobomber-tileset.png" width="288" height="32"/>
+ </tileset>
+ <tileset firstgid="10" source="external.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="9" height="9">
+  <properties>
+   <property name="layerprop" value="ff"/>
+  </properties>
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAECmNlYGBgJgIzQtXgookxA6QGl36YOLo5MjjcBlOPi0Y3Bxcfl36YOC59MHGQOgB6p0W6RAEAAA==
+  </data>
+ </layer>
+ <layer id="2" name="Tile Layer 2" width="9" height="9">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAECmNgGNyAaXA7D+w6AKM4Pz5EAQAA
+  </data>
+ </layer>
+</map>

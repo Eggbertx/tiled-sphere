@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"target": "es2017",
+		"module": "es2015",
+		"strict": true,
+		"baseUrl": "lib",
+		"paths": {
+			"@/*": [ "../*" ],
+			"$/*": [ "../scripts/*" ]
+		}
+	}
+}
