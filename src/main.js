@@ -5,7 +5,46 @@
 
 import { Thread } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
+import { TiledProperties } from 'tiled/tiled';
 
+function printMapData(/** @type {TiledMap} */ map) {
+	SSj.log("Map custom properties:");
+	map.customProperties.forEach((name, value, type) => {
+		SSj.log(`	properties[name: ${name}, type: ${type}] = ${value}`);
+	});
+	const optionKeys = Object.keys(map.options);
+	SSj.log("Map attributes:")
+	for(const key of optionKeys) {
+		SSj.log(`	${key}: ${map.options[key]}`)
+	}
+	SSj.log("Map layers:");
+	let layerID = 1;
+	for(const layer of map.layers) {
+		let layerKeys = Object.keys(layer);
+		for(const key of layerKeys) {
+			if(key === "options") {
+				let layerKeys = Object.keys(layer[key]);
+				SSj.log(`	Layer #${layerID} attributes:`);
+				for(const optionKey of layerKeys) {
+					SSj.log(`		${optionKey}: ${layer[key][optionKey]}`);
+				}
+				continue
+			} else if(key == "customProperties") {
+				if(layer[key].numProperties() == 0)
+					continue;
+				SSj.log(`	Layer #${layerID} properties:`);
+				layer[key].forEach(
+					function(name, value, type) {
+						// SSj.log("property goes here");
+						SSj.log(`		customProperty[name: '${name}', type: ${type}] = ${value}`);
+					}
+				);
+				continue;
+			}
+		}
+		layerID++;
+	}
+}
 
 export default class TiledReaderTest extends Thread {
 	constructor() {
@@ -31,12 +70,17 @@ export default class TiledReaderTest extends Thread {
 			}
 		}
 		SSj.log(`${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
+		printMapData(map);
 		return map;
 	}
-	loadTileset(path) {
+	loadTileset(path, xml) {
 		let start = Date.now();
 		let str = FS.readFile(path, DataType.Text);
-		let tsx = TiledTileset.fromXML(str);
+		let tsx = null;
+		if(xml)
+			tsx = TiledTileset.fromXMLstr(str);
+		else
+			tsx = TiledTileset.fromJSONstr(str);
 		SSj.log(`${path} parsed, took ${Date.now() - start} ms`);
 		return tsx;
 	}

@@ -13,4 +13,4 @@ Object.assign(Sphere.Game, {
 install('@/scripts',		files('src/*.js'));
 install('@/lib',			files('lib/*.js', true));
 install('@/maps',			files('maps/*', true));
-install('@/',				files('icon.png'));
+// install('@/',				files('icon.png'));

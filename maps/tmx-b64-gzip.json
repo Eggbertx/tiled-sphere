@@ -17,6 +17,12 @@
          "id":1,
          "name":"Tile Layer 1",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"layer Property",
+                 "type":"string",
+                 "value":"property value"
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":9,
