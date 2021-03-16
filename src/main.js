@@ -5,51 +5,16 @@
 
 import { Thread } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
-import { TiledProperties } from 'tiled/tiled';
 
-function printMapData(/** @type {TiledMap} */ map) {
-	SSj.log("Map custom properties:");
-	map.customProperties.forEach((name, value, type) => {
-		SSj.log(`	properties[name: ${name}, type: ${type}] = ${value}`);
-	});
-	const optionKeys = Object.keys(map.options);
-	SSj.log("Map attributes:")
-	for(const key of optionKeys) {
-		SSj.log(`	${key}: ${map.options[key]}`)
-	}
-	SSj.log("Map layers:");
-	let layerID = 1;
-	for(const layer of map.layers) {
-		let layerKeys = Object.keys(layer);
-		for(const key of layerKeys) {
-			if(key === "options") {
-				let layerKeys = Object.keys(layer[key]);
-				SSj.log(`	Layer #${layerID} attributes:`);
-				for(const optionKey of layerKeys) {
-					SSj.log(`		${optionKey}: ${layer[key][optionKey]}`);
-				}
-				continue
-			} else if(key == "customProperties") {
-				if(layer[key].numProperties() == 0)
-					continue;
-				SSj.log(`	Layer #${layerID} properties:`);
-				layer[key].forEach(
-					function(name, value, type) {
-						// SSj.log("property goes here");
-						SSj.log(`		customProperty[name: '${name}', type: ${type}] = ${value}`);
-					}
-				);
-				continue;
-			}
-		}
-		layerID++;
-	}
-}
+const json_b64_gzip_path = "@/maps/tmx-b64-gzip.json";
+const tmx_b64_gzip_path = "@/maps/tmx-b64-gzip.tmx";
+const external_tsx = "@/maps/external.tsx";
 
 export default class TiledReaderTest extends Thread {
 	constructor() {
 		super();
-		this.loadMap("@/maps/tmx-b64-gzip.json");
+		// this.loadMap(json_b64_gzip_path);
+		this.loadMap(tmx_b64_gzip_path, true);
 		// this.loadTileset("@/maps/external.tsx");
 	}
 	loadMap(path, xml) {
@@ -62,6 +27,8 @@ export default class TiledReaderTest extends Thread {
 			map = TiledMap.fromXML(str);
 		else
 			map = TiledMap.fromJSON(str);
+
+		map.debugPrint(SSj.log);
 		for(const l in map.layers) {
 			SSj.log(`Decompressing layer #${map.layers[l].id}`);
 			let decompressed = map.layers[l].decompressedData();
@@ -70,7 +37,6 @@ export default class TiledReaderTest extends Thread {
 			}
 		}
 		SSj.log(`${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
-		printMapData(map);
 		return map;
 	}
 	loadTileset(path, xml) {
