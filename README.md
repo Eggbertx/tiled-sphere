@@ -1,13 +1,13 @@
 # tiled-sphere
-An experimental map reader for [Tiled](mapeditor.org/) XML and JSON maps that will hopefully eventually turn into a useful Sphere map engine. Maybe I'll make it platform agnostic so it can be used for other JavaScript stuff, but that won't be a priority.
+A library for loading [Tiled](mapeditor.org/) XML and JSON maps to be used by a game engine. It's designed to be relatively platform agnostic (so no file I/O or image drawing in the library itself), but it's developed with the [Sphere game engine](https://github.com/fatcerberus/sphere) in mind 
 
 ## Usage
-Currently this doesn't actually do anything interesting, it just parses the map files for testing. When that fully works, I'll start working on actually rendering them.
+This doesn't really do anything interesting yet. It currently just parses a specific map file for testing and prints out some info about it for debugging purposes. When both XML and JSON map and tileset files can be parsed reliably, I'll start working on being able to render them in the Sphere game engine so that they can also be used elsewhere.
 
 ## Attribution
 [sax-js](lib/sax.js) is developed by [isaacs](https://github.com/isaacs/sax-js).
 
-[xml.js](lib/xml.js) was originally developed by [Bruce Pascoe](https://github.com/fatcerberus/) for [Sphere](https://github.com/fatcerberus/sphere) (with a couple small modifications by me), but is no longer in development.
+[xml.js](lib/xml.js) was originally developed by [Bruce Pascoe](https://github.com/fatcerberus/) for Sphere (with a couple small modifications by me), but is no longer in development.
 
 The [Sphere 2.x API definition file](types/sphere2-api.d.ts) was also developed by Bruce Pascoe.
 
