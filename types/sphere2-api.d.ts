@@ -1,6 +1,6 @@
 /**
  *  Cell, the Sphere packaging compiler
- *  Copyright (c) 2015-2019, Fat Cerberus
+ *  Copyright (c) 2015-2021, Fat Cerberus (with some modifications by Eggbertx)
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ declare namespace Sphere
 	const Engine: string;
 
 	/**
-	 * Information about the current game.  All values are taken from the game's JSON manifest
+	 * Information about the current game. All values are taken from the game's JSON manifest
 	 * (`game.json`).
 	 */
 	const Game: {
@@ -80,7 +80,7 @@ declare namespace Sphere
 	 * If the main module exports a class, the engine automatically creates an instance of it on
 	 * startup. Use this to access that object from anywhere.
 	 */
-	let main: any;
+	const main: any;
 
 	/** Abort execution immediately with an error message. This error will not be catchable. */
 	function abort(message: any): void;
@@ -98,7 +98,8 @@ declare namespace Sphere
 	function shutDown(): void;
 
 	/**
-	 * Get a promise that resolves after a given number of frames.  Use with `await`.
+	 * Get a promise that resolves after a given number of frames. Use with `await`.
+	 * @async
 	 * @param numFrames The number of frames to wait before resolving the promise.
 	 */
 	function sleep(numFrames: number): Promise<void>;
@@ -119,9 +120,16 @@ declare namespace SSj
 	function assert(check: boolean | (() => boolean), summary?: string): void;
 
 	/**
+	 * Immediately flips the contents of the backbuffer to the screen. The backbuffer is not
+	 * cleared afterwards. Useful for debugging graphics code.
+	 */
+	function flipScreen(): void;
+
+	/**
 	 * Log a JavaScript value or object to the console. A log line will also be displayed in SSj
 	 * while debugging.
-	 * @param message A message, object or other value to be logged.
+	 * @param message A message, object or other value to be logged. If an object is used, the result
+	 *                of calling `JSON.stringify()` will be logged.
 	 */
 	function log(message: any): void;
 
@@ -426,10 +434,10 @@ declare enum MouseKey
 	/** Synthetic. Produced when the wheel is spun to scroll down. */
 	WheelDown,
 
-	/** The Back button. */
+	/** The Back button (added in API 2) */
 	Back,
 
-	/** The Forward button. */
+	/** The Forward button (added in API 2). */
 	Forward,
 }
 
@@ -512,6 +520,12 @@ declare class BlendOp
 	 * destination color.
 	 */
 	static readonly Subtract: BlendOp;
+
+	/**
+	 * Subtractive blend: The components of the destination color are subtracted from those of the
+	 * source color.
+	 */
+	static readonly SubtractInverse: BlendOp;
 }
 
 /**
@@ -680,9 +694,9 @@ declare class Color
 
 	/**
 	 * Get a new `Color` which is a weighted average of the two given ones, using the given
-	 * weighting factors.
+	 * weighting factors if given.
 	 */
-	static mix(color1: Color, color2: Color, w1: number, w2: number): Color;
+	static mix(color1: Color, color2: Color, w1?: number, w2?: number): Color;
 
 	/**
 	 * Gets a `Color` corresponding to the specified color name which can be either HTML notation
@@ -695,7 +709,7 @@ declare class Color
 	 * @param red    The amount of red in the color.
 	 * @param green  The amount of green in the color.
 	 * @param blue   The amount of blue in the color.
-	 * @param alpha  Alpha (opacity).  Defaults to `1.0`.
+	 * @param alpha  Alpha (opacity). Defaults to `1.0`.
 	 */
 	constructor(red: number, green: number, blue: number, alpha?: number);
 
@@ -725,6 +739,21 @@ declare class Color
 	 * factor. Useful for implementing transitions.
 	 */
 	fadeTo(alphaFactor: number): Color;
+}
+
+/**
+ * Depth test criteria for 3D objects drawn to a surface.
+ */
+declare class DepthOp
+{
+	static readonly AlwaysPass: DepthOp;
+	static readonly NeverPass: DepthOp;
+	static readonly Equal: DepthOp;
+	static readonly Greater: DepthOp;
+	static readonly GreaterOrEqual: DepthOp;
+	static readonly Less: DepthOp;
+	static readonly LessOrEqual: DepthOp;
+	static readonly NotEqual: DepthOp;
 }
 
 /**
@@ -924,6 +953,21 @@ declare namespace FS
  */
 declare class FileStream
 {
+	/**
+	 * Asynchronously create a `FileStream` object that provides access to the file's contents.
+	 * @async
+	 * @param filename SphereFS path of the file to be opened
+	 * @param fileOp options to be used when opening the file
+	 */
+	static fromFile(filename: string, fileOp: FileOp): Promise<FileStream>;
+
+	/**
+	 * Asynchronously create a `FileStream` object that provides access to the file's contents.
+	 * @async
+	 * @param filename SphereFS path of the file to be opened
+	 * @param fileOp options to be used when opening the file
+	 * @deprecated as of API 3, use `FileStream.fromFile()`
+	 */
 	static open(fileName: string, fileOp: FileOp): Promise<FileStream>;
 
 	constructor(fileName: string, fileOp: FileOp)
@@ -937,13 +981,36 @@ declare class FileStream
 	/** Position of the next byte in the file to be read or written, starting at 0. */
 	position: number;
 
+	/**
+	 * Asynchronously read the specified number of bytes from the stream.
+	 * @async
+	 * @returns A `Promise` with the `ArrayBuffer` bytes.
+	 */
 	asyncRead(numBytes: number): Promise<ArrayBuffer>;
+
+	/**
+	 * Asynchronously write the given data to to the stream.
+	 * @async
+	 * @returns A `Promise` that resolves when all the bytes have been written
+	 */
 	asyncWrite(data: ArrayBuffer | ArrayBufferView): Promise<void>;
 
 	/** Clean up any resources held by this `FileStream` after using it. */
 	dispose(): void;
 
+	/**
+	 * Synchronously read data from the file up to the specified number of bytes. The file
+	 * must already be open.
+	 * @returns An ArrayBuffer containing the data read from the file. 
+	 * @deprecated as of API 3 and will be removed in API 4, use `FileStream#asyncRead()` instead.
+	 */
 	read(size: number): ArrayBuffer;
+
+	/** 
+	 * Write data to the file and advance the file pointer.
+	 * @param data `ArrayBuffer`, `TypedArray` or `DataView` containing the data to be written.
+	 * @deprecated as of API 3 and will be removed in API 4, use `FileStream#asyncWrite()` instead.
+	 */
 	write(data: ArrayBuffer | ArrayBufferView): void;
 }
 
@@ -960,9 +1027,10 @@ declare class Font
 	 * Load a font in the background and construct a new `Font` for it once it's ready.
 	 * @async
 	 * @param fileName SphereFS path of an RFN format font file.
+	 * @param size Size to be used for TrueType fonts, ignored for RFN fonts
 	 * @returns A promise for a newly constructed `Font` object.
 	 */
-	static fromFile(fileName: string): Promise<Font>;
+	static fromFile(fileName: string, size?: number): Promise<Font>;
 
 	/** SphereFS path of the file from which this `Font` was constructed. */
 	readonly fileName: string;
@@ -974,6 +1042,7 @@ declare class Font
 	 * Construct a new `Font` from a given font file. The font is usable immediately, but text will
 	 * not be rendered until it loads completely.
 	 * @param fileName SphereFS path of an RFN format font file.
+	 * @deprecated As of API 3 and will be removed in API 4. Use `Font.fromFile()` instead
 	 */
 	constructor(fileName: string);
 
@@ -992,20 +1061,22 @@ declare class Font
 	/**
 	 * Get the width and height of a text as drawn with this font when using word wrapping.
 	 * @param text      The text to be measured.
-	 * @param wrapWidth Maximum width at which to wrap the text, in pixels.
+	 * @param wrapWidth Maximum width at which to wrap the text, in pixels. If it is not provided, no wrap
+	 *                  processing will be performed.
 	 * @returns A `Size2D` object with the measured width and height of the text.
 	 */
-	getTextSize(text: string, wrapWidth: number): Size2D;
+	getTextSize(text: string, wrapWidth?: number): Size2D;
 
 	/**
 	 * Get the height of a text as drawn with this font using a given `wrapWidth`.
 	 * @param text      The text to be measured.
-	 * @param wrapWidth The maximum width at which to wrap the text, in pixels.
+	 * @param wrapWidth The maximum width at which to wrap the text, in pixels. If it is not provided, the
+	 *                  value of Font#height is returned
 	 */
 	heightOf(text: string, wrapWidth?: number): number;
 
 	/**
-	 * Get the width of a single line of text as drawn with this font.
+	 * Get the width of a single line of text as drawn with this font, without wrapping.
 	 * @param text The text to be measured.
 	 * @returns The width of the text when rendered, in pixels.
 	 */
@@ -1027,7 +1098,9 @@ declare class Font
 declare class IndexList
 {
 	/**
-	 * Construct a new index list from an array of numeric indices.
+	 * Construct a new index list from an array of numeric indices. The list of indices stored on
+	 * the GPU can't be modified later. If you want to upload a new set of indices, you must
+	 * construct a new `IndexList`.
 	 * @param indices The indices to be stored in the index list.
 	 */
 	constructor(indices: number[]);
@@ -1053,16 +1126,34 @@ declare interface JobToken
 
 declare class Joystick
 {
+	/**
+	 * The "null" joystick. When polled, a null joystick returns neutral values for all
+	 * inputs. It can be used in place of a real `Joystick` object.
+	 */
 	static readonly Null: Joystick;
+
 	static readonly P1: Joystick;
 	static readonly P2: Joystick;
 	static readonly P3: Joystick;
 	static readonly P4: Joystick;
 
+	/** 
+	 * Returns an array of `Joystick` objects, one for each connected joystick or gamepad.
+	 * Currently, neoSphere supports a maximum of 16 attached devices; this will never return
+	 * more than that.
+	 */
 	static getDevices(): Joystick[];
 
+	/**
+	 * The name of the device as reported by the OS. For example Xbox controllers are typicall reported
+	 * as "XInput Joystick <n>".
+	 */
 	readonly name: string;
+
+	/** The number of analog axes supported by the device. */
 	readonly numAxes: number;
+
+	/** The number of buttons supported by the device. */
 	readonly numButtons: number;
 
 	getPosition(axisID: number): number;
@@ -1070,7 +1161,7 @@ declare class Joystick
 }
 
 /**
- * Represents a keyboard-like input device.
+ * Represents a keyboard-like input device. neoSphere only supports a single keyboard.
  */
 declare class Keyboard
 {
@@ -1128,6 +1219,7 @@ declare class Mixer
 	 * @param sampleRate    The sample rate of the audio produced by the mixer, in Hz.
 	 * @param bitsPerSample Number of bits per sample.
 	 * @param numChannels   Number of independent sound channels in the mixer output.
+	 * @throws `Error` if the requested format is not supported by the system.
 	 */
 	constructor(sampleRate: number, bitsPerSample: 8 | 16 | 24 | 32, numChannels?: number);
 }
@@ -1165,7 +1257,9 @@ declare class Model
  */
 declare class Mouse
 {
-	/** The default mouse device provided by the engine. */
+	/** The default mouse device provided by the engine. neoSphere currently only supports a
+	 * single mouse.
+	 */
 	static readonly Default: Mouse;
 
 	/**
@@ -1255,6 +1349,7 @@ declare class Sample
 	 * Construct a new sample from the contents of an audio file. The sample can be used
 	 * immediately; playback will be silent until the file is fully loaded.
 	 * @param fileName SphereFS path of an audio file.
+	 * @deprecated as of API 3 and will be removed in API 4, use `Sample.fromFile()` instead.
 	 */
 	constructor(fileName: string);
 
@@ -1281,7 +1376,7 @@ declare class Server
 	 * Initialize a TCP server that listens for incoming connections on a given port.
 	 * @param port        TCP port number on which to run the server.
 	 * @param backlogSize Maximum number of incoming connections that can remain unaccepted before
-	 *                    new connections are refused.
+	 *                    new connections are refused (defaults to 128).
 	 */
 	constructor(port: number, backlogSize?: number);
 
@@ -1295,7 +1390,7 @@ declare class Server
 	/**
 	 * Number of incoming connections still waiting to be accepted.
 	 */
-	numPending: number;
+	readonly numPending: number;
 
 	/**
 	 * Accept a pending incoming connection and create a new `Socket` for it.
@@ -1306,6 +1401,7 @@ declare class Server
 
 	/**
 	 * Get a promise for the `Socket` of the next incoming connection, whenever one is available.
+	 * @async
 	 * @returns A promise for the next connection's `Socket`.
 	 */
 	acceptNext(): Promise<Socket>;
@@ -1367,6 +1463,13 @@ declare class Shader
 	setFloat(name: string, value: number) : void;
 
 	/**
+	 * Set the value of a `float` (floating point) array uniform.
+	 * @param name  Name of a `uniform` variable in the GLSL source text
+	 * @param value Values to set.
+	 */
+	setFloatArray(name: string, values: number[]): void;
+
+	/**
 	 * Set the values of a `vec2`, `vec3`, or `vec4` (floating point vector) uniform.
 	 * @param name   Name of a `uniform` variable in the GLSL source text.
 	 * @param values Values to set: an array of 2, 3, or 4 numbers.
@@ -1379,6 +1482,13 @@ declare class Shader
 	 * @param value Value to set. Anything after the decimal point will be ignored.
 	 */
 	setInt(name: string, value: number): void;
+
+	/**
+	 * Set the value of an `int` (integer) array uniform.
+	 * @param name   Name of a `uniform` array in the GLSL source text.
+	 * @param values Values to set.
+	 */
+	setIntArray(name: string, values: number[]): void;
 
 	/**
 	 * Set the values of an `ivec2`, `ivec3`, or `ivec4` (integer vector) uniform.
@@ -1394,6 +1504,12 @@ declare class Shader
 	 * @param transform A `Transform` object whose 4x4 matrix cells will be used.
 	 */
 	setMatrix(name: string, transform: Transform): void;
+
+	/**
+	 * Assigns a texture to a texture unit
+	 * @param name  Name of the texture in the GLSL source text.
+	 */
+	setSampler(name: string, texture: Texture, textureUnit: any): void;
 }
 
 /**
@@ -1444,7 +1560,7 @@ declare class Shape
 	constructor(type: number, texture: Texture | null, vertices: VertexList, indices?: IndexList);
 
 	/**
-	 * Index list specifying which elements of `vertexList` are used in the shape.  Set this to
+	 * Index list specifying which elements of `vertexList` are used in the shape. Set this to
 	 * `null` to use all elements of the vertex list in order.
 	 */
 	indexList: IndexList | null;
@@ -1462,6 +1578,7 @@ declare class Shape
 	/**
 	 * Draw this shape to the backbuffer using an optional transform.
 	 * @param transform Transform to be applied before the projection transform.
+	 * @throws `RangeError` if the current index list is larger than the vertex list
 	 */
 	draw(transform?: Transform): void;
 
@@ -1469,6 +1586,7 @@ declare class Shape
 	 * Draw this shape to a given surface using an optional transform.
 	 * @param surface   Surface the shape will be rendered to.
 	 * @param transform Transform to be applied before the projection transform.
+	 * @throws `RangeError` if the current index list is larger than the vertex list
 	 */
 	draw(surface: Surface, transform?: Transform): void;
 }
@@ -1479,11 +1597,13 @@ declare class Shape
 declare class Socket
 {
 	/**
-	 * Connect to a host in the background. The promise resolves once the connection has been made.
+	 * Asynchronously connect to a host. The promise resolves once the connection is established.
+	 * @async
 	 * @param hostName The name or IP address of the remote machine to connect to.
 	 * @param port     TCP port to connect on. The host must be listening on this port.
+	 * @throws Rejects with `Error` if the connection fails.
 	 */
-	static connectTo(hostName: string, port: number): Promise<Socket>;
+	connectTo(hostName: string, port: number): Promise<void>;
 
 	/**
 	 * Construct a new socket object. It will start out disconnected and a connection must be
@@ -1535,6 +1655,7 @@ declare class Socket
 	/**
 	 * Read data from the socket in the background. The promise resolves once the requested number
 	 * of bytes has been read.
+	 * @async
 	 * @param numBytes Number of bytes to read from the socket.
 	 * @returns A promise for an `ArrayBuffer` containing the data received.
 	 * @throws Rejects with `Error` if the connection is lost before all bytes can be read.
@@ -1544,6 +1665,7 @@ declare class Socket
 	/**
 	 * Write data to the socket in the background. The promise resolves once all the data has been
 	 * transmitted.
+	 * @async
 	 * @param data A buffer object containing the data to write.
 	 * @throws Rejects with `Error` if the connection is lost before all bytes can be transmitted.
 	 */
@@ -1558,6 +1680,7 @@ declare class Socket
 	/**
 	 * Start trying to connect this socket in the background. The promise resolves once the
 	 * connection is established.
+	 * @async
 	 * @param hostName The name or IP address of the remote machine to connect to.
 	 * @param port     TCP port to connect on. The host must be listening on this port.
 	 * @throws Rejects with `Error` if the connection fails.
@@ -1582,6 +1705,7 @@ declare class Socket
 	 * Read the next `numBytes` from this socket's receive buffer. There must be at least that much
 	 * data available for immediate reading (see `bytesAvailable`).
 	 * @param numBytes Number of bytes of data to read.
+	 * @throws `RangeError` if there is less data in the receive buffer than requested.
 	 */
 	read(numBytes: number): ArrayBuffer;
 
@@ -1609,6 +1733,7 @@ declare class Sound
 	 * Construct a `Sound` that can be used to play back the given audio file. The sound can be used
 	 * immediately, but playback may be silent until enough audio data has been buffered.
 	 * @param fileName SphereFS path of an audio file.
+	 * @deprecated as of API 3 and will be removed in API 4, use `Sound.fromFile()` instead.
 	 */
 	constructor(fileName: string);
 
@@ -1715,12 +1840,20 @@ declare class Surface extends Texture
 	/**
 	 * Create a new surface initialized from the contents of an image file. The image is loaded in
 	 * the background; the promise resolves once the surface is ready for use.
+	 * @async
 	 * @returns A promise for the new surface.
 	 */
 	static fromFile(fileName: string): Promise<Surface>;
 
 	/** Blending operation to use when rendering to this surface. */
 	blendOp: BlendOp;
+
+	/**
+	 * Depth test criteria for 3D objects drawn to this surface. The final Z coordinate of each
+	 * pixel drawn is tested against the current value in the surface's depth buffer and is either
+	 * rendered or skipped based on the operation specified:
+	 */
+	depthOp: DepthOp;
 
 	/** Height of the surface, in pixels. */
 	readonly height: number;
@@ -1734,8 +1867,8 @@ declare class Surface extends Texture
 	/**
 	 * Construct a new surface from the contents of an image file. Not supported in Oozaru; prefer
 	 * `Surface.fromFile` in new code.
-	 * @deprecated
 	 * @param fileName SphereFS path to an image file.
+	 * @deprecated as of API 3 and will be removed in API 4, use `Surface.fromFile()` instead.
 	 */
 	constructor(fileName: string);
 
@@ -1746,6 +1879,9 @@ declare class Surface extends Texture
 	 * @param content Either a `Color` to fill the texture with or a buffer of RGBA pixels.
 	 */
 	constructor(width: number, height: number, content?: Color | ArrayBuffer);
+
+	/** Clears the entire surface using the specified color and depth value */
+	clear(color: Color, depthValue?: number): void;
 
 	/**
 	 * Set this surface's clipping rectangle. When drawing to a surface, anything falling outside of
@@ -1760,7 +1896,7 @@ declare class Surface extends Texture
 	/**
 	 * Convert the contents of this surface to a texture. All surfaces are also textures, so this is
 	 * provided only for backward compatibility with API level 1.
-	 * @deprecated
+	 * @deprecated As of API 2, this is no longer necessary, as `Surface` objects can be used as `Texture`
 	 * @returns A new `Texture` created from the contents of this surface.
 	 */
 	toTexture(): Texture;
@@ -1774,7 +1910,9 @@ declare class Texture
 	/**
 	 * Create a texture from an image file in the background. The promise resolves with a new
 	 * `Texture` once it's ready to use.
+	 * @async
 	 * @param fileName SphereFS path of the image file to load.
+	 * 
 	 */
 	static fromFile(fileName: string): Promise<Texture>;
 
@@ -1793,6 +1931,7 @@ declare class Texture
 	/**
 	 * Construct a new texture from an image file.
 	 * @param fileName SphereFS path of the image file to load.
+	 * @deprecated as of API 3, use `Texture.fromFile()`
 	 */
 	constructor(fileName: string);
 
@@ -1887,7 +2026,9 @@ declare class Transform
 declare class VertexList
 {
 	/**
-	 * Construct a new vertex list from an array of vertex descriptors.
+	 * Construct a new vertex list from an array of vertex descriptors. The list of vertices
+	 * stored on the GPU can't be modified later. If you want to upload a new set of vertices,
+	 * you must construct a new `VertexList`
 	 * @param vertices An array of `Vertex` objects describing the vertices.
 	 */
 	constructor(vertices: Vertex[]);
@@ -1922,16 +2063,147 @@ declare namespace Z
  */
 declare module 'sphere-runtime'
 {
+	export { default as BufferStream } from 'buffer-stream';
 	export { default as Console } from 'console';
-	export { default as DataStream } from 'data-stream';
 	export { default as FocusTarget } from 'focus-target';
 	export { default as from, Query } from 'from';
 	export { default as Logger } from 'logger';
 	export { default as Music } from 'music';
+	export { default as Pact } from 'pact';
 	export { default as Prim } from 'prim';
 	export { default as Random } from 'random';
-	export { default as Tween, Easing } from 'tween';
+	export { default as Scene } from 'scene';
 	export { default as Thread } from 'thread';
+	export { default as Tween, Easing } from 'tween';
+}
+
+declare module 'buffer-stream'
+{
+	export default BufferStream;
+
+	/**
+	 * As of API 4, DataStream has been effectively replaced by BufferStream, since FileStream is now
+	 * entirely asynchronous.
+	 * 
+	*/
+	class BufferStream
+	{
+
+		/** Construct a new BufferStream object */
+		constructor(buffer: ArrayBufferLike|ArrayLike<number>);
+		
+		/** True if there are no more bytes to read in the buffer. */
+		readonly atEOF: boolean;
+
+		/** The size of the buffer. */
+		readonly bufferSize: number;
+
+		/** Get the current position in the buffer. */
+		get position(): number;
+
+		/** 
+		 * Set the current position in the buffer.
+		 * @throws `RangeError` if the given position is larger than the buffer.
+		 */
+		set position(pos: number);
+
+		/**
+		 * Read the given number of bytes from the buffer and return as a `Uint8Array`
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readBytes(numBytes: number): Uint8Array;
+
+		/**
+		 * Read a 32-bit floating point value from the buffer. If `littleEndian`
+		 * is true, reads in little-endian mode. Otherwise, reads in big-endian mode.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readFloat32(littleEndian: boolean): number;
+
+		/**
+		 * Read a 32-bit floating point value from the buffer. If `littleEndian`
+		 * is true, reads in little-endian mode. Otherwise, reads in big-endian mode.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readFloat64(littleEndian: boolean): number;
+
+		/**
+		 * Read an 8-bit integer from the buffer.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readInt8(): number;
+
+		/**
+		 * Read a 16-bit integer from the buffer.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readInt16(littleEndian: boolean): number;
+
+		/**
+		 * Read a 32-bit integer from the buffer.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readInt32(littleEndian: boolean): number;
+
+		/**
+		 * Read a string from the buffer
+		 * @param numBytes The size of the string to be read
+		 * @param stripNUL Strips the null-termination character from the end of the string if true
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readString(numBytes: number, stripNUL?: boolean): string;
+
+		/**
+		 * Read an 8-bit integer from the file, then read a string using that integer for the size
+		 * @param stripNUL Strips the null-termination character from the end of the string if true
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readStringU8(stripNUL?: boolean): string;
+
+		/**
+		 * Read a 16-bit integer from the file, then read a string using that integer for the size
+		 * @param stripNUL Strips the null-termination character from the end of the string if true
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readStringU16(stripNUL?: boolean): string;
+
+		/**
+		 * Read a 32-bit integer from the file, then read a string using that integer for the size
+		 * @param stripNUL Strips the null-termination character from the end of the string if true
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readStringU32(stripNUL?: boolean): string;
+
+		/**
+		 * Read an object from the file based on `manifest`
+		 * @todo Come up with a proper example
+		 */
+		readStruct(manifest: any): any
+
+		/**
+		 * Read an unsigned 8-bit integer from the buffer.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		readUint8(): number;
+
+		 /**
+		  * Read an unsigned 16-bit integer from the buffer.
+		  * @throws `Error` if this would exceed the size of the buffer.
+		  */
+		readUint16(littleEndian: boolean): number;
+ 
+		 /**
+		  * Read an unsigned 32-bit integer from the buffer.
+		  * @throws `Error` if this would exceed the size of the buffer.
+		  */
+		readUint32(littleEndian: boolean): number;
+
+		/**
+		 * Move the buffer pointer forward by the given number of bytes.
+		 * @throws `Error` if this would exceed the size of the buffer.
+		 */
+		skipAhead(numBytes: number): void;
+	}
 }
 
 declare module 'console'
@@ -2016,59 +2288,6 @@ declare module 'console'
 		 * @param name
 		 */
 		undefineObject(name: string): void;
-	}
-}
-
-declare module 'data-stream'
-{
-	export default DataStream;
-
-	/**
-	 * DataStream class
-	 */
-	class DataStream extends FileStream
-	{
-		constructor(fileName:string, fileOp:FileOp);
-
-		readFloat32(littleEndian?:boolean):number;
-
-		readFloat64(littleEndian?:boolean):number;
-
-		readInt8():number;
-
-		readInt16(littleEndian:boolean):number;
-
-		readInt32(littleEndian:boolean):number;
-
-		readInt64(littleEndian:boolean):number;
-
-		readUint8():number;
-
-		readUint16(littleEndian:boolean):number;
-
-		readUint32(littleEndian:boolean):number;
-
-		readUint64(littleEndian:boolean):number;
-
-		readStringRaw(length:number):string;
-
-		readString8():string;
-
-		readString16(littleEndian:boolean):string;
-
-		readString32(littleEndian:boolean):string;
-
-		/**
-		 * Read an object from the file based on `desc`
-		 * @example
-		 * let readStruct = dsObj.readStruct({
-		 * 	strField: { type: 'fstring', length: 4 },
-		 * 	uint8Field: { type: 'uint8' },
-		 * 	arrayBufferField: { type: 'raw': size: 25 },
-		 * 	uint16leField: { type: 'uint16le' }
-		 * });
-		 */
-		readStruct(desc:any):any;
 	}
 }
 
@@ -2693,6 +2912,107 @@ declare module 'random'
 		 *                 either direction ("give or take").
 		 */
 		function uniform(mean: number, variance: number): number;
+	}
+}
+
+declare module 'scene'
+{
+	export default Scene;
+
+	interface SceneOptions
+	{
+		inBackground?: boolean;
+
+		priority?: number;
+	}
+
+	interface SceneDef
+	{
+		start(scene: Scene, ...args: any): void;
+
+		finish?(scene: Scene): void;
+
+		getInput?(scene: Scene): void;
+
+		render?(scene: Scene): void;
+
+		update?(scene: Scene): void;
+	}
+
+	/**
+	 * The Scene object encapsulates a powerful scene engine which can run multiple
+	 * operations in parallel, and then sync the timelines up as needed.  An example
+	 * of this would be where several characters need to move into place for a
+	 * cutscene, but may take differing amounts of time to get there.  The game can
+	 * fork the timeline once for each character, and then resync on the main
+	 * timeline, which will wait until all the forked timelines finish before
+	 * continuing.
+	 */
+	class Scene
+	{
+		/** The Dispatch priority to use for new scenes unless another one is specified. */
+		static defaultPriority: number;
+
+		/**
+		 * Register a new scenelet with the Scene engine
+		 * @param name The name of the operation to be used as a scenelet method name.
+		 * @param def An object defining the scenelet.
+		 */
+		defineOp(name: string, def: SceneDef): void;
+
+		constructor(options?: SceneOptions);
+
+		readonly running: boolean;
+
+		/**
+		 * Executes any scenelets between the `doIf()` call and its corresponding `end()` call
+		 * only if `predicate` returns `true`, similar to an if statement.
+		 * @param predicate A function with a boolean return value.
+		 */
+		doIf(predicate:()=> boolean): void;
+
+		/**
+		 * Executes any scenelets between the `doIf()` call and its corresponding `end()` call
+		 * in a loop until `predicate` returns `false`, similar to a while statement.
+		 * @param predicate A function with a boolean return value.
+		 */
+		doWhile(predicate:()=> boolean): void;
+
+		/**
+		 * A metascenelet which closes the open context.
+		 */
+		end(): void;
+
+		/**
+		 * A metascenelet which forks the timeline. This opens a new timeline to which all
+		 * subsequent scenelets are added until a corresponding `end()` is encountered. Forked
+		 * timelines run in parallel with the timeline that spawned them.
+		 */
+		fork(): void;
+
+		/**
+		 * Restart the scene from the beginning, regardless of whether or not it was already running.
+		 */
+		restart(): void;
+
+		/**
+		 * A metascenelet which adds a resync point to the open timeline. Timelines may be forked to
+		 * run operations in parallel, but it is sometimes necessary to wait until several simultaneous
+		 * operations have completed before continuing.
+		 */
+		resync(): void;
+
+		/**
+		 * Starts playing the scene. This function can be used with `await`.
+		 * @returns A promise that resolves once playback ends.
+		 */
+		run(): void;
+
+		/**
+		 * Stops the scene. The next time the scene is run, it will start from the beginning. The `Promise`
+		 * returned by `run()` will resolve normally, as this is not an error.
+		 */
+		stop(): void;
 	}
 }
 

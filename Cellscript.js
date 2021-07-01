@@ -4,13 +4,13 @@ Object.assign(Sphere.Game, {
 
 	name: "Tiled Map Reader",
 	author: "Eggbertx",
-	summary: "An experimental map engine that uses maps created in the Tiled editor",
+	summary: "An experimental Tiled -> Sphere map converter",
 	resolution: '800x600',
 
 	main: '@/scripts/main.js',
 });
 
-install('@/scripts',		files('src/*.js'));
-install('@/lib',			files('lib/*.js', true));
-install('@/maps',			files('maps/*', true));
-// install('@/',				files('icon.png'));
+install('@/scripts',files('src/*.js'));
+install('@/lib',	files('lib/*.js', true));
+install('@/maps',	files('maps/*', true));
+// install('@/',		files('icon.png'));

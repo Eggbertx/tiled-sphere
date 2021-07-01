@@ -3,12 +3,24 @@
  * (c) 2021 Eggbertx
  */
 
-import { Thread } from 'sphere-runtime';
+import { Thread, Console } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
+
+const maps = [
+	"@/maps/map-b64-gzip.json",
+	"@/maps/map-b64-gzip.tmx",
+	"@/maps/map-b64-zlib.json",
+	"@/maps/map-b64-zlib.tmx",
+	"@/maps/map-b64.json",
+	"@/maps/map-b64.tmx",
+	"@/maps/map-csv.json",
+	"@/maps/map-csv.tmx",
+];
 
 const json_b64_gzip_path = "@/maps/tmx-b64-gzip.json";
 const tmx_b64_gzip_path = "@/maps/tmx-b64-gzip.tmx";
 const external_tsx = "@/maps/external.tsx";
+
 
 export default class TiledReaderTest extends Thread {
 	constructor() {
