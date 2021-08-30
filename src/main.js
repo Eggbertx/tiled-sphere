@@ -9,6 +9,7 @@
 
 import { Thread, Console } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
+import { TiledMapRenderer } from './renderer'
 
 const maps = [
 	"@/maps/map-b64-gzip.json",
@@ -28,10 +29,15 @@ const console = new Console();
 export default class TiledReaderTest extends Thread {
 	constructor() {
 		super();
-		for(const map of maps) {
+		/*for(const map of maps) {
 			this.loadMap(map, true);
-		}
-		// this.loadTileset("@/maps/external.tsx");
+		}*/
+		let mapFilename = "@/maps/map-csv.json";
+		let map = this.loadMap(mapFilename, true);
+		this.loadTileset("@/maps/external.tsx");
+		this.renderer = new TiledMapRenderer(map, Surface.Screen);
+		this.renderer.filename = mapFilename;
+		this.renderer.start();
 	}
 	loadMap(path, verbose = false) {
 		let str = FS.readFile(path, DataType.Text);

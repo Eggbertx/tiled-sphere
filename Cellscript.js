@@ -2,10 +2,10 @@ Object.assign(Sphere.Game, {
 	version: 2,
 	apiLevel: 3,
 
-	name: "Tiled Map Reader",
+	name: "Tiled map reader demo",
 	author: "Eggbertx",
 	summary: "An experimental Tiled -> Sphere map converter",
-	resolution: '800x600',
+	resolution: '640x480',
 	saveID: "Eggbertx.tiled-sphere",
 
 	main: '@/scripts/main.js',

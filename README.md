@@ -4,6 +4,13 @@ A library for loading [Tiled](mapeditor.org/) XML and JSON maps to be used by a 
 ## Usage
 This doesn't really do anything interesting yet. It currently just parses a specific map file for testing and prints out some info about it for debugging purposes. When both XML and JSON map and tileset files can be parsed reliably, I'll start working on being able to render them in the Sphere game engine so that they can also be used elsewhere.
 
+## Tiled support
+ * Supported map formats: tmx (xml), json
+ * Supported layer formats: base64, csv
+ * Supported layer compression formats: gzip, zlib
+
+Layer compression isn't required, and the tiled-sphere library should be able to detect if it isn't necessary.
+
 ## Attribution
 [sax-js](lib/sax.js) is developed by [isaacs](https://github.com/isaacs/sax-js).
 
