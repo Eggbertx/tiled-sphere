@@ -1,6 +1,6 @@
 Object.assign(Sphere.Game, {
 	version: 2,
-	apiLevel: 4,
+	apiLevel: 3,
 
 	name: "Tiled Map Reader",
 	author: "Eggbertx",

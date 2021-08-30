@@ -1,5 +1,9 @@
 /*
  * Tiled Map Reader
+ * a simple test for parsing Tiled map and tileset files
+ * Supported map formats: tmx, json
+ * Supported layer formats: base64, csv
+ * Supported layer compression formats: none, gzip, zlib
  * (c) 2021 Eggbertx
  */
 
@@ -25,14 +29,15 @@ export default class TiledReaderTest extends Thread {
 	constructor() {
 		super();
 		for(const map of maps) {
-			this.loadMap(map);
+			this.loadMap(map, true);
 		}
 		// this.loadTileset("@/maps/external.tsx");
 	}
-	loadMap(path) {
+	loadMap(path, verbose = false) {
 		let str = FS.readFile(path, DataType.Text);
 		let start = Date.now();
-		console.log("Parsing XML file into map");
+
+		console.log(`Parsing map file: ${path}`);
 		/** @type {TiledMap} */
 		let map = null;
 		let isXML = path.toLowerCase().endsWith(".tmx");
@@ -40,17 +45,19 @@ export default class TiledReaderTest extends Thread {
 			map = TiledMap.fromXML(str);
 		else
 			map = TiledMap.fromJSON(str);
-
-		console.log("loading " + path);
-		// map.debugPrint(console.log);
+		if(verbose) {
+			map.debugPrint(function(...data) {
+				console.log(...data);
+			});
+		}
 		for(const l in map.layers) {
-			// console.log(`Decompressing layer #${map.layers[l].id}`);
+			console.log(`	Decompressing layer #${map.layers[l].id}`);
 			let decompressed = map.layers[l].decompressedData();
 			for(const d of decompressed) {
 				// console.log(d);
 			}
 		}
-		console.log(`${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
+		console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
 		return map;
 	}
 	loadTileset(path) {
