@@ -11,62 +11,62 @@ import { Thread, Console } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
 import { TiledMapRenderer } from './renderer'
 
-const maps = [
-	"@/maps/map-b64-gzip.json",
-	"@/maps/map-b64-gzip.tmx",
-	"@/maps/map-b64-zlib.json",
-	"@/maps/map-b64-zlib.tmx",
-	"@/maps/map-b64.json",
-	"@/maps/map-b64.tmx",
-	"@/maps/map-csv.json",
-	"@/maps/map-csv.tmx",
-];
-
 const external_tsx = "@/maps/external.tsx";
 
 const console = new Console();
 
 export default class TiledReaderTest extends Thread {
-	constructor() {
+	constructor(mapFile) {
 		super();
 		/*for(const map of maps) {
 			this.loadMap(map, true);
 		}*/
-		let mapFilename = "@/maps/map-csv.json";
-		let map = this.loadMap(mapFilename, true);
+		/** @type {TiledMap} */
+		this.map = null;
+		/** @type {TiledMapRenderer} */
+		this.renderer = null;
+	}
+	start(mapFile) {
+		super.start();
+		if(arguments.length == 0)
+			Sphere.abort("usage: neosphere|spherun path/to/map")
+
+		let map = this.loadMap(mapFile, false);
 		this.loadTileset("@/maps/external.tsx");
 		this.renderer = new TiledMapRenderer(map, Surface.Screen);
-		this.renderer.filename = mapFilename;
+		this.renderer.filename = mapFile;
 		this.renderer.start();
 	}
 	loadMap(path, verbose = false) {
 		let str = FS.readFile(path, DataType.Text);
 		let start = Date.now();
 
-		console.log(`Parsing map file: ${path}`);
+		if(verbose)
+			console.log(`Parsing map file: ${path}`);
 		/** @type {TiledMap} */
 		let map = null;
-		let isXML = path.toLowerCase().endsWith(".tmx");
-		if(isXML)
+
+		let fnLower = path.toLowerCase();
+		if(fnLower.endsWith(".tmx"))
 			map = TiledMap.fromXML(str);
-		else
+		else if(fnLower.endsWith(".json"))
 			map = TiledMap.fromJSON(str);
-		if(verbose) {
-			map.debugPrint(function(...data) {
-				console.log(...data);
-			});
-		}
+		else
+			Sphere.abort(`${path} does not appear to be a supported Tiled map (accepted file extensions are .tmx and json)`)
+
 		for(const l in map.layers) {
-			console.log(`	Decompressing layer #${map.layers[l].id}`);
+			if(verbose)
+				console.log(`	Decompressing layer #${map.layers[l].id}`);
 			let decompressed = map.layers[l].decompressedData();
 			for(const d of decompressed) {
 				// console.log(d);
 			}
 		}
-		console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
+		if(verbose)
+			console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
 		return map;
 	}
-	loadTileset(path) {
+	loadTileset(path, verbose = false) {
 		let start = Date.now();
 		let str = FS.readFile(path, DataType.Text);
 		let tsx = null;
@@ -75,7 +75,8 @@ export default class TiledReaderTest extends Thread {
 			tsx = TiledTileset.fromXMLstr(str);
 		else
 			tsx = TiledTileset.fromJSONstr(str);
-		console.log(`${path} parsed, took ${Date.now() - start} ms`);
+		if(verbose)
+			console.log(`${path} parsed, took ${Date.now() - start} ms`);
 		return tsx;
 	}
 
