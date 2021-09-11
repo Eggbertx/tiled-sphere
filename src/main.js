@@ -10,7 +10,7 @@
 import { Thread, Console, Prim } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
 
-const testPadding = 8;
+const testPadding = 16;
 
 const screen = Surface.Screen;
 const font = Font.Default;
@@ -137,8 +137,8 @@ export default class TiledReaderTest extends Thread {
 
 	on_render() {
 		let x = testPadding;
-		let y = testPadding;
-
+		let y = testPadding + 8;
+		Prim.drawSolidRectangle(screen, 0, 0, screen.width, screen.height, Color.DarkBlue);
 		for (const m in this.surfaces) {
 			/** @type {Surface} */
 			let surface = this.surfaces[m];
@@ -149,7 +149,10 @@ export default class TiledReaderTest extends Thread {
 			Prim.blit(screen, x, y, surface);
 			let split = testMaps[m].split("/");
 			let text = split[split.length-1];
-			font.drawText(screen, x + surface.width/2 - font.widthOf(text)/2, y, text, Color.Green);
+			font.drawText(screen,
+				x + surface.width/2 - font.widthOf(text)/2,
+				y - 12,
+				text, Color.Green);
 			x += testPadding + surface.width;
 		}
 	}
