@@ -1,12 +1,12 @@
 { "compressionlevel":0,
- "height":9,
+ "height":4,
  "infinite":false,
  "layers":[
         {
          "compression":"gzip",
-         "data":"H4sIAAAAAAAECmNlYGBgJgIzQtXgookxA6QGl36YOLo5rDjcBlOPi0Y3Bxcfl36YOC59MHGQOgCIylwtRAEAAA==",
+         "data":"H4sIAAAAAAAECmNkYGBgRMPMaHyQPCsWMZA4ANJPPwFAAAAA",
          "encoding":"base64",
-         "height":9,
+         "height":4,
          "id":1,
          "name":"Tile Layer 1",
          "opacity":1,
@@ -18,21 +18,21 @@
                 }],
          "type":"tilelayer",
          "visible":true,
-         "width":9,
+         "width":4,
          "x":0,
          "y":0
         }, 
         {
          "compression":"gzip",
-         "data":"H4sIAAAAAAAECmNgGNyAaXA7D+w6AKM4Pz5EAQAA",
+         "data":"H4sIAAAAAAAECmNgwA5YkITZkNjoTACnLrCgQAAAAA==",
          "encoding":"base64",
-         "height":9,
+         "height":4,
          "id":2,
          "name":"Tile Layer 2",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
-         "width":9,
+         "width":4,
          "x":0,
          "y":0
         }],
@@ -81,15 +81,15 @@
          "value":"Sphere.abort(\"Leaving west\")"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.7.0",
+ "tiledversion":"1.7.2",
  "tileheight":32,
  "tilesets":[
         {
-         "columns":9,
+         "columns":8,
          "firstgid":1,
-         "image":"monobomber-tileset.png",
+         "image":"simple-tileset.png",
          "imageheight":32,
-         "imagewidth":288,
+         "imagewidth":256,
          "margin":0,
          "name":"monobomber-tileset",
          "spacing":0,
@@ -104,5 +104,5 @@
  "tilewidth":32,
  "type":"map",
  "version":"1.6",
- "width":9
+ "width":4
 }

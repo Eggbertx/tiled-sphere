@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.4" tiledversion="1.4.3" name="external" tilewidth="16" tileheight="16" tilecount="36" columns="18">
- <image source="monobomber-tileset.png" trans="fefefe" width="288" height="32"/>
+<tileset version="1.5" tiledversion="1.7.2" name="external" tilewidth="32" tileheight="32" tilecount="36" columns="8">
+ <grid orientation="orthogonal" width="16" height="16"/>
+ <image source="simple-tileset.png" width="256" height="32"/>
  <tile id="0">
   <properties>
    <property name="123" value="3.2"/>

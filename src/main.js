@@ -7,36 +7,85 @@
  * (c) 2021 Eggbertx
  */
 
-import { Thread, Console } from 'sphere-runtime';
+import { Thread, Console, Prim } from 'sphere-runtime';
 import { TiledMap, TiledTileset } from 'tiled/tiled';
-import { TiledMapRenderer } from './renderer'
 
-const external_tsx = "@/maps/external.tsx";
+const testPadding = 8;
+
+const screen = Surface.Screen;
+const font = Font.Default;
+
+let testMaps = [
+	// "maps/base-empty.tmx",
+	"maps/map-b64-gzip.json",
+	"maps/map-b64-gzip.tmx",
+	"maps/map-b64-zlib.json",
+	"maps/map-b64-zlib.tmx", 
+	"maps/map-b64.json",
+	"maps/map-b64.tmx",
+	"maps/map-csv.json",
+	"maps/map-csv.tmx"
+];
 
 const console = new Console();
 
 export default class TiledReaderTest extends Thread {
-	constructor(mapFile) {
+	constructor() {
 		super();
-		/*for(const map of maps) {
-			this.loadMap(map, true);
-		}*/
-		/** @type {TiledMap} */
-		this.map = null;
-		/** @type {TiledMapRenderer} */
-		this.renderer = null;
-	}
-	start(mapFile) {
-		super.start();
-		if(arguments.length == 0)
-			Sphere.abort("usage: neosphere|spherun path/to/map")
+		/** @type {TiledMap[]} */
+		this.maps = [];
+		for(const map of testMaps) {
+			this.maps.push(this.loadMap(map, true));
+		}
 
-		let map = this.loadMap(mapFile, false);
-		this.loadTileset("@/maps/external.tsx");
-		this.renderer = new TiledMapRenderer(map, Surface.Screen);
-		this.renderer.filename = mapFile;
-		this.renderer.start();
+		this.surfaces = [];
+
+		this.tileSetPath = "@/maps/simple-tileset.png";
+		// todo: make this actually load a given map's tileset. This is just a temporary placeholder
+		this.tilesetSurface = null;
+		Surface.fromFile(this.tileSetPath).then(tileset => {
+			this.tilesetSurface = tileset;
+			for(const m in this.maps) {
+				let map = this.maps[m];
+				this.surfaces.push(this.getMapSurface(map, testMaps[m]));
+			}
+		});
 	}
+	getMapSurface(/** @type {TiledMap} */ map, filename = "") {
+		let mW = map.width * map.tileWidth;
+		let mH = map.height * map.tileHeight;
+		let surface = new Surface(mW, mH, Color.Black);
+
+		for(let l = 0; l < map.layers.length; l++) {
+			let layerSurface = this.getLayerSurface(map, l, filename);
+			if(layerSurface == null)
+				continue;
+			Prim.blit(surface, 0, 0, layerSurface);
+		}
+		return surface;
+	}
+	getLayerSurface(/** @type {TiledMap} */ map, /** @type {Number} */ l, filename = "") {
+		if(!map.layers[l].visible || this.tilesetSurface == null)
+			return null;
+
+		let tw = map.tileWidth;
+		let th = map.tileHeight;
+		let surface = new Surface(tw * map.width, th * map.tileHeight, Color.Transparent);
+		for(let y = 0; y < map.height; y++) {
+			for(let x = 0; x < map.width; x++) {
+				let tileIndex = map.tileAt(x, y, l) - 1;
+				if(tileIndex == -1)
+					continue;
+
+				// draw the portion of the tileset image onto the map
+				Prim.blitSection(surface,
+					x*tw, y*th, this.tilesetSurface,
+					tileIndex*tw, 0, tw, th);
+			}
+		}
+		return surface;
+	}
+
 	loadMap(path, verbose = false) {
 		let str = FS.readFile(path, DataType.Text);
 		let start = Date.now();
@@ -57,7 +106,8 @@ export default class TiledReaderTest extends Thread {
 		for(const l in map.layers) {
 			if(verbose)
 				console.log(`	Decompressing layer #${map.layers[l].id}`);
-			let decompressed = map.layers[l].decompressedData();
+			map.layers[l].decompressData();
+			let decompressed = map.layers[l]._decompressed;
 			for(const d of decompressed) {
 				// console.log(d);
 			}
@@ -86,6 +136,21 @@ export default class TiledReaderTest extends Thread {
 	}
 
 	on_render() {
+		let x = testPadding;
+		let y = testPadding;
 
+		for (const m in this.surfaces) {
+			/** @type {Surface} */
+			let surface = this.surfaces[m];
+			if(x + surface.width > screen.width) {
+				x = testPadding;
+				y += testPadding + surface.height;
+			}
+			Prim.blit(screen, x, y, surface);
+			let split = testMaps[m].split("/");
+			let text = split[split.length-1];
+			font.drawText(screen, x + surface.width/2 - font.widthOf(text)/2, y, text, Color.Green);
+			x += testPadding + surface.width;
+		}
 	}
 }
