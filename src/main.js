@@ -14,9 +14,9 @@ const testPadding = 16;
 
 const screen = Surface.Screen;
 const font = Font.Default;
+const console = new Console();
 
 let testMaps = [
-	// "maps/base-empty.tmx",
 	"maps/map-b64-gzip.json",
 	"maps/map-b64-gzip.tmx",
 	"maps/map-b64-zlib.json",
@@ -27,13 +27,21 @@ let testMaps = [
 	"maps/map-csv.tmx"
 ];
 
-const console = new Console();
+let testTilesets = [
+	"maps/external.json",
+	"maps/external.tsx"
+]
 
 export default class TiledReaderTest extends Thread {
 	constructor() {
 		super();
 		/** @type {TiledMap[]} */
 		this.maps = [];
+		this.testMapLoading();
+		this.testTilesetLoading();
+	}
+	testMapLoading() {
+		console.log("Testing map loading/parsing");
 		for(const map of testMaps) {
 			this.maps.push(this.loadMap(map, true));
 		}
@@ -50,6 +58,15 @@ export default class TiledReaderTest extends Thread {
 				this.surfaces.push(this.getMapSurface(map, testMaps[m]));
 			}
 		});
+	}
+	testTilesetLoading() {
+		console.log("Testing tileset loading/parsing");
+		for(const path of testTilesets) {
+			let ts = this.loadTileset(path, true);
+			ts.debugPrint((args) => {
+				console.log(args);
+			});
+		}
 	}
 	getMapSurface(/** @type {TiledMap} */ map, filename = "") {
 		let mW = map.width * map.tileWidth;
@@ -152,7 +169,7 @@ export default class TiledReaderTest extends Thread {
 			font.drawText(screen,
 				x + surface.width/2 - font.widthOf(text)/2,
 				y - 12,
-				text, Color.Green);
+				text, Color.MediumSeaGreen);
 			x += testPadding + surface.width;
 		}
 	}
