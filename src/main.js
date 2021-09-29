@@ -38,7 +38,7 @@ export default class TiledReaderTest extends Thread {
 		/** @type {TiledMap[]} */
 		this.maps = [];
 		this.testMapLoading();
-		this.testTilesetLoading();
+		// this.testTilesetLoading();
 	}
 	testMapLoading() {
 		console.log("Testing map loading/parsing");
@@ -116,7 +116,7 @@ export default class TiledReaderTest extends Thread {
 		if(fnLower.endsWith(".tmx"))
 			map = TiledMap.fromXML(str);
 		else if(fnLower.endsWith(".json"))
-			map = TiledMap.fromJSON(str);
+			map = TiledMap.fromJSON(str, true);
 		else
 			Sphere.abort(`${path} does not appear to be a supported Tiled map (accepted file extensions are .tmx and json)`)
 
@@ -131,6 +131,9 @@ export default class TiledReaderTest extends Thread {
 		}
 		if(verbose)
 			console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
+		map.debugPrint(args => {
+			console.log(args);
+		}, true);
 		return map;
 	}
 	loadTileset(path, verbose = false) {
@@ -141,7 +144,7 @@ export default class TiledReaderTest extends Thread {
 		if(isXML)
 			tsx = TiledTileset.fromXMLstr(str);
 		else
-			tsx = TiledTileset.fromJSONstr(str);
+			tsx = TiledTileset.fromJSON(str, true);
 		if(verbose)
 			console.log(`${path} parsed, took ${Date.now() - start} ms`);
 		return tsx;
@@ -155,7 +158,7 @@ export default class TiledReaderTest extends Thread {
 	on_render() {
 		let x = testPadding;
 		let y = testPadding + 8;
-		Prim.drawSolidRectangle(screen, 0, 0, screen.width, screen.height, Color.DarkBlue);
+		Prim.fill(screen, Color.DarkBlue);
 		for (const m in this.surfaces) {
 			/** @type {Surface} */
 			let surface = this.surfaces[m];
