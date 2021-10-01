@@ -37,6 +37,8 @@ export default class TiledReaderTest extends Thread {
 		super();
 		/** @type {TiledMap[]} */
 		this.maps = [];
+		/** @type {Surface[]} */
+		this.surfaces = [];
 		this.testMapLoading();
 		// this.testTilesetLoading();
 	}
@@ -45,8 +47,6 @@ export default class TiledReaderTest extends Thread {
 		for(const map of testMaps) {
 			this.maps.push(this.loadMap(map, true));
 		}
-
-		this.surfaces = [];
 
 		this.tileSetPath = "@/maps/simple-tileset.png";
 		// todo: make this actually load a given map's tileset. This is just a temporary placeholder
@@ -116,7 +116,7 @@ export default class TiledReaderTest extends Thread {
 		if(fnLower.endsWith(".tmx"))
 			map = TiledMap.fromXML(str);
 		else if(fnLower.endsWith(".json"))
-			map = TiledMap.fromJSON(str, true);
+			map = TiledMap.fromJSON(str);
 		else
 			Sphere.abort(`${path} does not appear to be a supported Tiled map (accepted file extensions are .tmx and json)`)
 
@@ -142,9 +142,9 @@ export default class TiledReaderTest extends Thread {
 		let tsx = null;
 		let isXML = path.toLowerCase().endsWith(".tsx");
 		if(isXML)
-			tsx = TiledTileset.fromXMLstr(str);
+			tsx = TiledTileset.fromXML(str);
 		else
-			tsx = TiledTileset.fromJSON(str, true);
+			tsx = TiledTileset.fromJSON(str);
 		if(verbose)
 			console.log(`${path} parsed, took ${Date.now() - start} ms`);
 		return tsx;
