@@ -15,7 +15,7 @@ declare interface TiledMapAttributes {
 declare interface TiledPropertiesAttributes {
 	name: string;
 	type: string;
-	value: any;
+	value: boolean|number|string;
 }
 
 declare interface TiledTilesetAttributes {

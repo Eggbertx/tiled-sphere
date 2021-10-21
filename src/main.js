@@ -15,6 +15,7 @@ const testPadding = 16;
 const screen = Surface.Screen;
 const font = Font.Default;
 const console = new Console();
+const tileSetPath = "@/maps/simple-tileset.png";
 
 let testMaps = [
 	"maps/map-b64-gzip.json",
@@ -42,16 +43,15 @@ export default class TiledReaderTest extends Thread {
 		this.testMapLoading();
 		// this.testTilesetLoading();
 	}
-	testMapLoading() {
+	testMapLoading(debugPrint = true) {
 		console.log("Testing map loading/parsing");
 		for(const map of testMaps) {
 			this.maps.push(this.loadMap(map, true));
 		}
 
-		this.tileSetPath = "@/maps/simple-tileset.png";
 		// todo: make this actually load a given map's tileset. This is just a temporary placeholder
 		this.tilesetSurface = null;
-		Surface.fromFile(this.tileSetPath).then(tileset => {
+		Surface.fromFile(tileSetPath).then(tileset => {
 			this.tilesetSurface = tileset;
 			for(const m in this.maps) {
 				let map = this.maps[m];
@@ -59,16 +59,21 @@ export default class TiledReaderTest extends Thread {
 			}
 		});
 	}
-	testTilesetLoading() {
+	testTilesetLoading(debugPrint = true) {
 		console.log("Testing tileset loading/parsing");
 		for(const path of testTilesets) {
-			let ts = this.loadTileset(path, true);
+			let ts = this.loadTileset(path, verbose);
+			if(!debugPrint) continue;
 			ts.debugPrint((args) => {
 				console.log(args);
 			});
 		}
 	}
-	getMapSurface(/** @type {TiledMap} */ map, filename = "") {
+	/**
+	 * @param {TiledMap} map
+	 * @param {string} filename
+	 */
+	getMapSurface(map, filename = "") {
 		let mW = map.width * map.tileWidth;
 		let mH = map.height * map.tileHeight;
 		let surface = new Surface(mW, mH, Color.Black);
@@ -81,7 +86,12 @@ export default class TiledReaderTest extends Thread {
 		}
 		return surface;
 	}
-	getLayerSurface(/** @type {TiledMap} */ map, /** @type {Number} */ l, filename = "") {
+	/**
+	 * @param {TiledMap} map
+	 * @param {number} l
+	 * @param {string} filename
+	 */
+	getLayerSurface(map, l, filename = "") {
 		if(!map.layers[l].visible || this.tilesetSurface == null)
 			return null;
 
@@ -103,7 +113,11 @@ export default class TiledReaderTest extends Thread {
 		return surface;
 	}
 
-	loadMap(path, verbose = false) {
+	/**
+	 * @param {string} path
+	 * @param {boolean} verbose
+	 */
+	loadMap(path, debugPrint = true, verbose = true) {
 		let str = FS.readFile(path, DataType.Text);
 		let start = Date.now();
 
@@ -131,12 +145,18 @@ export default class TiledReaderTest extends Thread {
 		}
 		if(verbose)
 			console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
-		map.debugPrint(args => {
-			console.log(args);
-		}, true);
+		if(debugPrint) {
+			map.debugPrint(args => {
+				console.log(args);
+			}, true);
+		}
 		return map;
 	}
-	loadTileset(path, verbose = false) {
+	/**
+	 * @param {string} path
+	 * @param {boolean} verbose
+	 */
+	loadTileset(path, debugPrint = true, verbose = true) {
 		let start = Date.now();
 		let str = FS.readFile(path, DataType.Text);
 		let tsx = null;
@@ -145,8 +165,14 @@ export default class TiledReaderTest extends Thread {
 			tsx = TiledTileset.fromXML(str);
 		else
 			tsx = TiledTileset.fromJSON(str);
+
 		if(verbose)
 			console.log(`${path} parsed, took ${Date.now() - start} ms`);
+		if(debugPrint) {
+			tsx.debugPrint(args => {
+				console.log(args);
+			});
+		}
 		return tsx;
 	}
 
@@ -172,7 +198,7 @@ export default class TiledReaderTest extends Thread {
 			font.drawText(screen,
 				x + surface.width/2 - font.widthOf(text)/2,
 				y - 12,
-				text, Color.MediumSeaGreen);
+				text, Color.White);
 			x += testPadding + surface.width;
 		}
 	}
