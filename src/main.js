@@ -36,14 +36,25 @@ let testTilesets = [
 export default class TiledReaderTest extends Thread {
 	constructor() {
 		super();
+		this.debugPrint = true;
+		this.verbosePrint = true;
 		/** @type {TiledMap[]} */
 		this.maps = [];
 		/** @type {Surface[]} */
 		this.surfaces = [];
+	}
+	start() {
+		super.start();
+		for(const arg of arguments) {
+			if(arg == "nodebug")
+				this.debugPrint = false;
+			else if(arg == "noverbose")
+				this.verbosePrint = false;
+		}
 		this.testMapLoading();
 		// this.testTilesetLoading();
 	}
-	testMapLoading(debugPrint = true) {
+	testMapLoading() {
 		console.log("Testing map loading/parsing");
 		for(const map of testMaps) {
 			this.maps.push(this.loadMap(map, true));
@@ -59,11 +70,11 @@ export default class TiledReaderTest extends Thread {
 			}
 		});
 	}
-	testTilesetLoading(debugPrint = true) {
+	testTilesetLoading() {
 		console.log("Testing tileset loading/parsing");
 		for(const path of testTilesets) {
-			let ts = this.loadTileset(path, verbose);
-			if(!debugPrint) continue;
+			let ts = this.loadTileset(path, this.verbosePrint);
+			if(!this.debugPrint) continue;
 			ts.debugPrint((args) => {
 				console.log(args);
 			});
@@ -115,13 +126,12 @@ export default class TiledReaderTest extends Thread {
 
 	/**
 	 * @param {string} path
-	 * @param {boolean} verbose
 	 */
-	loadMap(path, debugPrint = true, verbose = true) {
+	loadMap(path) {
 		let str = FS.readFile(path, DataType.Text);
 		let start = Date.now();
 
-		if(verbose)
+		if(this.verbosePrint)
 			console.log(`Parsing map file: ${path}`);
 		/** @type {TiledMap} */
 		let map = null;
@@ -135,7 +145,7 @@ export default class TiledReaderTest extends Thread {
 			Sphere.abort(`${path} does not appear to be a supported Tiled map (accepted file extensions are .tmx and json)`)
 
 		for(const l in map.layers) {
-			if(verbose)
+			if(this.verbosePrint)
 				console.log(`	Decompressing layer #${map.layers[l].id}`);
 			map.layers[l].decompressData();
 			let decompressed = map.layers[l]._decompressed;
@@ -143,9 +153,9 @@ export default class TiledReaderTest extends Thread {
 				// console.log(d);
 			}
 		}
-		if(verbose)
+		if(this.verbosePrint)
 			console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
-		if(debugPrint) {
+		if(this.debugPrint) {
 			map.debugPrint(args => {
 				console.log(args);
 			}, true);
@@ -154,9 +164,8 @@ export default class TiledReaderTest extends Thread {
 	}
 	/**
 	 * @param {string} path
-	 * @param {boolean} verbose
 	 */
-	loadTileset(path, debugPrint = true, verbose = true) {
+	loadTileset(path) {
 		let start = Date.now();
 		let str = FS.readFile(path, DataType.Text);
 		let tsx = null;
@@ -166,9 +175,9 @@ export default class TiledReaderTest extends Thread {
 		else
 			tsx = TiledTileset.fromJSON(str);
 
-		if(verbose)
+		if(this.verbosePrint)
 			console.log(`${path} parsed, took ${Date.now() - start} ms`);
-		if(debugPrint) {
+		if(this.debugPrint) {
 			tsx.debugPrint(args => {
 				console.log(args);
 			});
