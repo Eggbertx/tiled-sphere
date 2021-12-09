@@ -31,7 +31,14 @@ let testMaps = [
 let testTilesets = [
 	"maps/external.json",
 	"maps/external.tsx"
-]
+];
+
+// used as a cache so images don't have to be reloaded/parsed
+// tilesetSurfaces[path] -> Surface
+let tilesetSurfaces = {};
+
+// mapSurfaces[mapPath] -> Surface
+let mapSurfaces = {}
 
 export default class TiledReaderTest extends Thread {
 	constructor() {
@@ -46,40 +53,54 @@ export default class TiledReaderTest extends Thread {
 	start() {
 		super.start();
 		for(const arg of arguments) {
-			if(arg == "nodebug")
+			if(arg == "--nodebug")
 				this.debugPrint = false;
-			else if(arg == "noverbose")
+			else if(arg == "--noverbose")
 				this.verbosePrint = false;
+			else {
+				this.maps.push(this.loadMap(arg));
+				return;
+			}
 		}
 		this.testMapLoading();
 		// this.testTilesetLoading();
 	}
-	testMapLoading() {
+	async testMapLoading() {
 		console.log("Testing map loading/parsing");
-		for(const map of testMaps) {
-			this.maps.push(this.loadMap(map, true));
-		}
-
-		// todo: make this actually load a given map's tileset. This is just a temporary placeholder
-		this.tilesetSurface = null;
-		Surface.fromFile(tileSetPath).then(tileset => {
-			this.tilesetSurface = tileset;
-			for(const m in this.maps) {
-				let map = this.maps[m];
-				this.surfaces.push(this.getMapSurface(map, testMaps[m]));
+		for(const mapPath of testMaps) {
+			let map = this.loadMap(mapPath);
+			let width = map.width * map.tileWidth;
+			let height = map.height * map.tileHeight;
+			for(const t in map.tilesets) {
+				let tileset = map.tilesets[t];
+				if(tileset.isExternal) {
+					map.tilesets[t] = this.loadTileset(FS.fullPath(tileset.source, "@/maps"));
+					tileset = map.tilesets[t];
+				}
+				let imgPath = FS.fullPath(tileset.image, "@/maps");
+				if(tileset.image != "" && tilesetSurfaces[imgPath] === undefined) {
+					tilesetSurfaces[imgPath] = await Surface.fromFile(imgPath);
+					console.log(`Loading tileset image ${imgPath}`);
+				}
 			}
-		});
-	}
-	testTilesetLoading() {
-		console.log("Testing tileset loading/parsing");
-		for(const path of testTilesets) {
-			let ts = this.loadTileset(path, this.verbosePrint);
-			if(!this.debugPrint) continue;
-			ts.debugPrint((args) => {
-				console.log(args);
-			});
+
+			for(const layer of map.layers) {
+
+			}
+			this.maps.push(map);
+			console.log(`done processing map ${mapPath}`);
 		}
 	}
+	// testTilesetLoading() {
+	// 	console.log("Testing tileset loading/parsing");
+	// 	for(const path of testTilesets) {
+	// 		let ts = this.loadTileset(path, this.verbosePrint);
+	// 		if(!this.debugPrint) continue;
+	// 		ts.debugPrint((args) => {
+	// 			console.log(args);
+	// 		});
+	// 	}
+	// }
 	/**
 	 * @param {TiledMap} map
 	 * @param {string} filename
@@ -88,6 +109,10 @@ export default class TiledReaderTest extends Thread {
 		let mW = map.width * map.tileWidth;
 		let mH = map.height * map.tileHeight;
 		let surface = new Surface(mW, mH, Color.Black);
+
+		for(const tileset of map.tilesets) {
+			Sphere.abort(`Is external: ${tileset.isExternal}`);
+		}
 
 		for(let l = 0; l < map.layers.length; l++) {
 			let layerSurface = this.getLayerSurface(map, l, filename);
@@ -149,8 +174,8 @@ export default class TiledReaderTest extends Thread {
 				console.log(`	Decompressing layer #${map.layers[l].id}`);
 			map.layers[l].decompressData();
 			let decompressed = map.layers[l]._decompressed;
-			for(const d of decompressed) {
-				// console.log(d);
+			for(const d in decompressed) {
+				// console.log(`${path} layer[${l}] decompressed[${d}]: ${decompressed[d]}`);
 			}
 		}
 		if(this.verbosePrint)
@@ -159,6 +184,13 @@ export default class TiledReaderTest extends Thread {
 			map.debugPrint(args => {
 				console.log(args);
 			}, true);
+		}
+		for(const ts in map.tilesets) {
+			if(map.tilesets[ts].isExternal) {
+				
+				map.tilesets[ts] = this.loadTileset(FS.fullPath(map.tilesets[ts].source, "@/maps/"));
+				// SSj.log(map.tilesets[ts]);
+			}
 		}
 		return map;
 	}
@@ -194,21 +226,21 @@ export default class TiledReaderTest extends Thread {
 		let x = testPadding;
 		let y = testPadding + 8;
 		Prim.fill(screen, Color.DarkBlue);
-		for (const m in this.surfaces) {
-			/** @type {Surface} */
-			let surface = this.surfaces[m];
-			if(x + surface.width > screen.width) {
-				x = testPadding;
-				y += testPadding + surface.height;
-			}
-			Prim.blit(screen, x, y, surface);
-			let split = testMaps[m].split("/");
-			let text = split[split.length-1];
-			font.drawText(screen,
-				x + surface.width/2 - font.widthOf(text)/2,
-				y - 12,
-				text, Color.White);
-			x += testPadding + surface.width;
+		for (const m in testMaps) {
+			// /** @type {Surface} */
+			// let surface = this.surfaces[m];
+			// if(x + surface.width > screen.width) {
+			// 	x = testPadding;
+			// 	y += testPadding + surface.height;
+			// }
+			// Prim.blit(screen, x, y, surface);
+			// let split = testMaps[m].split("/");
+			// let text = split[split.length-1];
+			// font.drawText(screen,
+			// 	x + surface.width/2 - font.widthOf(text)/2,
+			// 	y - 12,
+			// 	text, Color.White);
+			// x += testPadding + surface.width;
 		}
 	}
 }
