@@ -1,5 +1,5 @@
 # tiled-sphere
-A library for loading [Tiled](mapeditor.org/) XML and JSON maps to be used by a game engine. It's designed to be relatively platform agnostic (so no file I/O or image drawing in the library itself), but it's developed with the [Sphere game engine](https://github.com/fatcerberus/sphere) in mind 
+A library for loading [Tiled](mapeditor.org/) XML and JSON maps to be used by the [Sphere game engine](https://github.com/fatcerberus/sphere)'s build tool, cell.
 
 ## Usage
 This doesn't really do anything interesting yet. It currently just parses a specific map file for testing and prints out some info about it for debugging purposes. When both XML and JSON map and tileset files can be parsed reliably, I'll start working on being able to render them in the Sphere game engine so that they can also be used elsewhere.

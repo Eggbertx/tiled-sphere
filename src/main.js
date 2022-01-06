@@ -57,13 +57,14 @@ export default class TiledReaderTest extends Thread {
 				this.debugPrint = false;
 			else if(arg == "--noverbose")
 				this.verbosePrint = false;
-			else {
+			else if(arg == "--help") {
+				Sphere.abort("usage: neosphere [--noverbose|--nodebug] path/to/map.[tmx|json]")
+			} else {
 				this.maps.push(this.loadMap(arg));
 				return;
 			}
 		}
 		this.testMapLoading();
-		// this.testTilesetLoading();
 	}
 	async testMapLoading() {
 		console.log("Testing map loading/parsing");
@@ -91,16 +92,6 @@ export default class TiledReaderTest extends Thread {
 			console.log(`done processing map ${mapPath}`);
 		}
 	}
-	// testTilesetLoading() {
-	// 	console.log("Testing tileset loading/parsing");
-	// 	for(const path of testTilesets) {
-	// 		let ts = this.loadTileset(path, this.verbosePrint);
-	// 		if(!this.debugPrint) continue;
-	// 		ts.debugPrint((args) => {
-	// 			console.log(args);
-	// 		});
-	// 	}
-	// }
 	/**
 	 * @param {TiledMap} map
 	 * @param {string} filename
@@ -111,7 +102,7 @@ export default class TiledReaderTest extends Thread {
 		let surface = new Surface(mW, mH, Color.Black);
 
 		for(const tileset of map.tilesets) {
-			Sphere.abort(`Is external: ${tileset.isExternal}`);
+			// SSj.log(tileset);
 		}
 
 		for(let l = 0; l < map.layers.length; l++) {
@@ -153,22 +144,9 @@ export default class TiledReaderTest extends Thread {
 	 * @param {string} path
 	 */
 	loadMap(path) {
-		let str = FS.readFile(path, DataType.Text);
-		let start = Date.now();
-
-		if(this.verbosePrint)
-			console.log(`Parsing map file: ${path}`);
-		/** @type {TiledMap} */
-		let map = null;
-
-		let fnLower = path.toLowerCase();
-		if(fnLower.endsWith(".tmx"))
-			map = TiledMap.fromXML(str);
-		else if(fnLower.endsWith(".json"))
-			map = TiledMap.fromJSON(str);
-		else
-			Sphere.abort(`${path} does not appear to be a supported Tiled map (accepted file extensions are .tmx and json)`)
-
+		// let start = Date.now();
+		let map = TiledMap.fromFile(path);
+		
 		for(const l in map.layers) {
 			if(this.verbosePrint)
 				console.log(`	Decompressing layer #${map.layers[l].id}`);
@@ -176,20 +154,6 @@ export default class TiledReaderTest extends Thread {
 			let decompressed = map.layers[l]._decompressed;
 			for(const d in decompressed) {
 				// console.log(`${path} layer[${l}] decompressed[${d}]: ${decompressed[d]}`);
-			}
-		}
-		if(this.verbosePrint)
-			console.log(`	${path} parsed and layers decompressed, took ${Date.now() - start} ms`);
-		if(this.debugPrint) {
-			map.debugPrint(args => {
-				console.log(args);
-			}, true);
-		}
-		for(const ts in map.tilesets) {
-			if(map.tilesets[ts].isExternal) {
-				
-				map.tilesets[ts] = this.loadTileset(FS.fullPath(map.tilesets[ts].source, "@/maps/"));
-				// SSj.log(map.tilesets[ts]);
 			}
 		}
 		return map;
