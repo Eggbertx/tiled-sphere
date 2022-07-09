@@ -1,0 +1,17 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Build project with Cell",
+			"type": "f5anything",
+			"request": "launch",
+			"command": "cell"
+		},
+		{
+			"name": "Run with neoSphere",
+			"type": "f5anything",
+			"request": "launch",
+			"command": "cell && spherun dist"
+		}
+	]
+}
