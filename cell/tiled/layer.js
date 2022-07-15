@@ -1,6 +1,7 @@
+import base64 from "base64-js"
+import pako from "pako";
+
 import { TiledProperties } from './properties';
-const atob = require("base64").toByteArray;
-const pako = require("pako");
 
 const delimiter = /,\s*/g;
 let noProperties = new TiledProperties();
@@ -24,7 +25,7 @@ function layerToArray(data, encoding, compression) {
 	} else if(encoding != "base64") {
 		throw new EncodingMethodError(encoding);
 	}
-	let decoded = atob(data);
+	let decoded = base64.toByteArray(data);
 	/** @type {ArrayBufferLike} */
 	let inflated;
 	if(compression == "gzip")
@@ -93,34 +94,34 @@ export class TiledLayer {
 	get opacity() {
 		if(this.options['opacity'] === undefined)
 			return 1.0;
-		return parseFloat(this.options["opacity"]);
+		return parseFloat(this.options.opacity);
 	}
 	set opacity(op) {
-		this.options["opacity"] = op;
+		this.options.opacity = op;
 	}
 	get width() {
-		return parseInt(this.options["width"])
+		return parseInt(this.options.width);
 	}
 	get height() {
-		return parseInt(this.options["height"])
+		return parseInt(this.options.height);
 	}
 	get tintColor() {
-		return this.options["tintcolor"];
+		return this.options.tintcolor;
 	}
 	set tintColor(col) {
-		this.options["tintColor"] = col;
+		this.options.tintColor = col;
 	}
 	get xOffset() {
-		return this.options["offsetx"];
+		return this.options.offsetx;
 	}
 	set xOffset(x) {
-		this.options["offsetx"] = x;
+		this.options.offsetx = x;
 	}
 	get yOffset() {
-		return this.options["offsety"];
+		return this.options.offsety;
 	}
 	set yOffset(y) {
-		this.options["offsety"] = y;
+		this.options.offsety = y;
 	}
 
 	decompressData() {

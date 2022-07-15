@@ -1,5 +1,5 @@
-import { TiledProperties } from 'tiled/tiled';
-import XML from '../xml';
+import { TiledProperties } from "./properties";
+import XML from './xml';
 
 export class TiledTileset {
 	/**
@@ -21,8 +21,8 @@ export class TiledTileset {
 
 		/** @type {Surface} */
 		this.surface = null;
-		/** @type {Color} */
-		this.transColor = Color.White;
+		// /** @type {Color} */
+		// this.transColor = Color.White;
 	}
 	/** @type {string} */
 	get name() {
@@ -88,7 +88,7 @@ export class TiledTileset {
 	 * 
 	 */
 	static fromFile(path) {
-		let str = FS.readFile(path, DataType.Text);
+		let str = FS.readFile(path);
 		switch(FS.extensionOf(path).toLowerCase()) {
 			case ".tsx":
 				return TiledTileset.fromXML(str, path);

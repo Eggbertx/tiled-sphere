@@ -1,4 +1,4 @@
-import XML from '../xml';
+import XML from './xml';
 import { TiledLayer } from './layer';
 import { TiledProperties } from './properties';
 import { TiledTileset } from './tileset';
@@ -34,6 +34,9 @@ export class TiledMap {
 		if(this.customProperties == null) {
 			this.customProperties = new TiledProperties();
 		}
+
+		/** @type {FileStream} */
+		this.fileStream = null;
 	}
 
 	/**
@@ -175,7 +178,7 @@ export class TiledMap {
 	 * @returns {TiledMap}
 	 */
 	static fromFile(path) {
-		let str = FS.readFile(path, DataType.Text);
+		let str = FS.readFile(path);
 		switch(FS.extensionOf(path).toLowerCase()) {
 			case ".tmx":
 				return TiledMap.fromXML(str, path);
@@ -204,8 +207,12 @@ export class TiledMap {
 		let tilesets = [];
 		let tilesetNodes = tmx.nodes.filter(node => node.name == "tileset");
 		for(const tileset of tilesetNodes) {
-			let relativePath = FS.directoryOf(path);
-			tilesets.push(TiledTileset.fromJSON(tileset.attributes, relativePath));
+			if(typeof tileset.attributes.source == "string")
+				tilesets.push(TiledTileset.fromFile(
+					FS.fullPath(tileset.attributes.source, FS.directoryOf(path))
+				));
+			else
+				tilesets.push(TiledTileset.fromXML())
 		}
 		let map = new TiledMap(mapOptions, TiledProperties.fromXMLNode(tmx));
 		let layerNodes = tmx.nodes.filter(node => node.name == "layer");
@@ -265,5 +272,9 @@ export class TiledMap {
 			);
 		}
 		return map;
+	}
+	toRMP(outPath) {
+		this.fileStream = new FileStream(outPath, FileOp.Write);
+		this.fileStream.asyncWrite
 	}
 }

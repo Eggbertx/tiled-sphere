@@ -1,3 +1,5 @@
+import { tiledconv } from "./cell/tiledconv";
+
 Object.assign(Sphere.Game, {
 	version: 2,
 	apiLevel: 3,
@@ -12,6 +14,7 @@ Object.assign(Sphere.Game, {
 });
 
 install('@/scripts',files('src/*.js'));
-install('@/lib',	files('lib/*.js', true));
-install('@/maps',	files('maps/*', true));
+// install('@/lib',	files('lib/*.js', true));
+// install('@/maps',	files('maps/*', true));
+tiledconv("@/maps/", files("maps/*.tmx", true));
 // install('@/',		files('icon.png'));

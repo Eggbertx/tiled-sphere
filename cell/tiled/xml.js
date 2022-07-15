@@ -30,7 +30,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
 **/
 
-const sax = require('sax');
+import { default as sax } from "sax";
 
 const defaultOptions = { normalize: true };
 

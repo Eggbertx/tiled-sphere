@@ -17,14 +17,6 @@ Here's a screenshot of it loading and rendering a simple map saved with differen
 Layer compression isn't required, and the tiled-sphere library should be able to detect if it isn't necessary.
 
 ## Attribution
-[sax-js](lib/sax.js) is developed by [isaacs](https://github.com/isaacs/sax-js).
-
-[xml.js](lib/xml.js) was originally developed by [Bruce Pascoe](https://github.com/fatcerberus/) for Sphere (with a couple small modifications by me), but is no longer in development.
+[xml.js](cell/tiled/xml.js) was originally developed by [Bruce Pascoe](https://github.com/fatcerberus/) for neoSphere (with a couple small modifications by me), but is no longer in development.
 
 The [Sphere 2.x API definition file](types/sphere2-api.d.ts) was also developed by Bruce Pascoe.
-
-[Base64.js](lib/base64.js) is developed by [davidchambers](https://github.com/davidchambers/Base64.js).
-
-[pako](https://github.com/nodeca/pako/) is developed by nodeka
-
-These libraries are packaged with tiled-sphere for convenience, since it's simpler to package them than to have to import the npm packages.
