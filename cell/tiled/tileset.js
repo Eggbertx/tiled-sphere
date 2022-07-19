@@ -151,7 +151,9 @@ export class TiledTileset {
 		let tiles = tsx.nodes.filter(node => node.name == "tile");
 		let customProperties = tsx.nodes.filter(node => node.name == "properties");
 
-		let properties = TiledProperties.fromXMLNode(customProperties[0]);
+		let properties = null;
+		if(customProperties.length > 0)
+			properties = TiledProperties.fromXMLNode(customProperties[0]);
 		return new TiledTileset(options, tiles, properties);
 	}
 }
